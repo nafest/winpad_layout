@@ -6,6 +6,7 @@
 // License: MIT License (for full license see LICENSE)
 
 #include <windows.h>
+#include <dwmapi.h>
 #include "resource.h"
 
 #include <algorithm>
@@ -58,6 +59,25 @@ bool ShouldBeMaximized(int q1, int q2)
 	return false;
 }
 
+// on windows 10 some window borders are invisible.
+// Get their width to compensate them
+RECT GetWindowBorder(HWND window)
+{
+	RECT  window_rect;
+	GetWindowRect(window, &window_rect);
+
+	RECT  extended_rect;
+	DwmGetWindowAttribute(window, DWMWA_EXTENDED_FRAME_BOUNDS, &extended_rect, sizeof(RECT));
+
+	RECT  border;
+	border.left = window_rect.left - extended_rect.left;
+	border.top = window_rect.top - extended_rect.top;
+	border.right = window_rect.right - extended_rect.right;
+	border.bottom = window_rect.bottom - extended_rect.bottom;
+
+	return border;
+}
+
 // low level keyboard callback, which is registered with
 // SetWindowsHookEx to listen for all keyboard events
 LRESULT CALLBACK KeybdProc(int aCode, WPARAM wParam, LPARAM lParam)
@@ -82,6 +102,15 @@ LRESULT CALLBACK KeybdProc(int aCode, WPARAM wParam, LPARAM lParam)
 
 	int quadrant = -1;
 
+	// ignore the ctrl + numpad key down events,
+	// but avoid that they are forwared to other
+	// hooks or applications
+	if (wParam == WM_KEYDOWN && ctrl_down)
+	{
+		if (vk >= VK_NUMPAD1 && vk <= VK_NUMPAD9)
+	      return 1;
+	}
+
 	// has any of the numbers on the numpad been
 	// released?
 	if (wParam == WM_KEYUP && ctrl_down)
@@ -101,6 +130,7 @@ LRESULT CALLBACK KeybdProc(int aCode, WPARAM wParam, LPARAM lParam)
 	if (first_quadrant != -1 && quadrant != -1)
 	{
 		auto active_window = GetForegroundWindow();
+		auto border = GetWindowBorder(active_window);
 
 		RECT window_rect;
 		GetWindowRect(active_window, &window_rect);
@@ -122,10 +152,10 @@ LRESULT CALLBACK KeybdProc(int aCode, WPARAM wParam, LPARAM lParam)
 			auto rect2 = GetQuadrant(monitor_info.rcWork, quadrant);
 
 			RECT new_rect;
-			new_rect.left = std::min<LONG>(rect1.left, rect2.left);
-			new_rect.top = std::min<LONG>(rect1.top, rect2.top);
-			new_rect.right = std::max<LONG>(rect1.right, rect2.right);
-			new_rect.bottom = std::max<LONG>(rect1.bottom, rect2.bottom);
+			new_rect.left = std::min<LONG>(rect1.left, rect2.left) + border.left;
+			new_rect.top = std::min<LONG>(rect1.top, rect2.top) + border.top;
+			new_rect.right = std::max<LONG>(rect1.right, rect2.right) + border.right;
+			new_rect.bottom = std::max<LONG>(rect1.bottom, rect2.bottom) + border.bottom;
 
 			if (IsMaximized(active_window))
 			{
