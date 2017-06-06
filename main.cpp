@@ -11,6 +11,32 @@
 
 #include <algorithm>
 
+
+// set the awareness level of the current process, this
+// is only possible in Windows 8.1 and newer, so load
+// the function SetProcessDpiAwareness dynamically
+void BeDpiAware()
+{
+	typedef enum _PROCESS_DPI_AWARENESS {
+		PROCESS_DPI_UNAWARE = 0,
+		PROCESS_SYSTEM_DPI_AWARE = 1,
+		PROCESS_PER_MONITOR_DPI_AWARE = 2
+	} PROCESS_DPI_AWARENESS;
+
+	typedef HRESULT(WINAPI *SetProcessDpiAwarenessType) (
+		PROCESS_DPI_AWARENESS);
+
+	SetProcessDpiAwarenessType SetProcessDpiAwareness = nullptr;
+
+	auto shcore_module = LoadLibrary(L"shcore");
+	if (shcore_module)
+	{
+		SetProcessDpiAwareness = (SetProcessDpiAwarenessType)GetProcAddress(shcore_module, "SetProcessDpiAwareness");
+		if (SetProcessDpiAwareness != nullptr)
+			SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+	}
+}
+
 // given the rectangle of the current monitors'
 // workspace, return the rectangle of the
 // given quadrant
@@ -212,6 +238,11 @@ int CALLBACK WinMain(
 	_In_ int       nCmdShow
 )
 {
+	// on newer windows versions, signal that winpad_layout is DPI aware,
+	// otherwise windows may apply unwanted scaling to the dimensions passed
+	// to SetWindowPos
+	BeDpiAware();
+
 	// open a hidden window because we need one for creating
 	// the tray icon on liston on its events
 	WNDCLASSEX wx = {};
