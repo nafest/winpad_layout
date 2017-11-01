@@ -1,6 +1,6 @@
 ## winpad_layout
 
-This is a shameless ripoff of [janten/keypad-layout](https://github.com/janten/keypad-layout) for all those of us that cannot afford a Mac to run it.
+This is a shameless rip-off of [janten/keypad-layout](https://github.com/janten/keypad-layout) for all those of us that cannot afford a Mac to run it.
 
 ### Who it works
 
@@ -14,7 +14,6 @@ Builds with CMake and a Visual Studio 2015 environment.
 
 None required. Just run the executable.
 
-### Deinstallation
+### Uninstallation
 
-Stop the process by choosing 'Close' in the popup menu of it's tray icon. Delete the exectuable.
-
+Stop the process by choosing 'Close' in the popup menu of its tray icon. Delete the executable.
