@@ -1,6 +1,6 @@
 ## winpad_layout
 
-This is a shameless rip-off of [janten/keypad-layout](https://github.com/janten/keypad-layout) for all those of us that cannot afford a Mac to run it.
+This is a shameless rip-off of [janten/keypad-layout](https://github.com/janten/keypad-layout) for all those of us that don't want to own a Mac to run it.
 
 ### Who it works
 
